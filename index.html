@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>WE - High Definition Edition</title>
+    <title>WE - Forever</title>
     <style>
         body, html {
             margin: 0; padding: 0; width: 100%; height: 100%;
@@ -18,7 +18,6 @@
             align-items: center; justify-content: flex-start;
         }
 
-        /* 桌面端恢复横向布局 */
         @media (min-width: 769px) {
             .container { flex-direction: row; }
             .content-left { width: 45%; padding-left: 8%; text-align: left; margin-top: 0; }
@@ -30,13 +29,12 @@
         }
         .content-left h1 { font-size: 1.8rem; color: #333; margin-bottom: 10px; }
         .content-left p {
-            font-size: 0.95rem; color: #555; line-height: 2; margin: 0;
+            font-size: 0.95rem; color: #555; line-height: 2.2; margin: 0;
             letter-spacing: 1px; opacity: 0; animation: fadeIn 2s ease forwards;
         }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* 画布基础 CSS 保持 100% */
         #treeCanvas { position: absolute; top: 0; left: 0; z-index: 5; width: 100%; height: 100%; }
 
         .horizon {
@@ -46,7 +44,7 @@
 
         .ground-petal {
             position: absolute; z-index: 6; cursor: pointer;
-            transition: top 0.5s ease, transform 0.5s ease;
+            transition: top 0.6s cubic-bezier(0.25, 0.8, 0.25, 1), transform 0.6s ease;
             transform-origin: center bottom;
         }
 
@@ -54,16 +52,16 @@
             display: none; position: fixed; top: 50%; left: 50%;
             transform: translate(-50%, -50%); z-index: 2000;
             background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
             padding: 20px; border-radius: 20px; text-align: center;
-            width: 80%; max-width: 340px; box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            width: 80%; max-width: 340px; box-shadow: 0 20px 40px rgba(0,0,0,0.1);
         }
-        .modal.active { display: block; animation: zoom 0.3s ease; }
-        .modal img { width: 100%; border-radius: 12px; border: 3px solid white; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
-        .modal p { color: #333; margin-top: 15px; font-weight: bold; }
+        .modal.active { display: block; animation: zoom 0.4s ease; }
+        .modal img { width: 100%; border-radius: 12px; border: 3px solid white; }
+        .modal p { color: #333; margin-top: 15px; font-weight: bold; letter-spacing: 1px; }
         
         @keyframes zoom { from { transform: translate(-50%, -50%) scale(0.9); opacity: 0; } }
-        .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 1999; }
+        .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.3); z-index: 1999; }
     </style>
 </head>
 <body>
@@ -76,6 +74,7 @@
 
     <div class="container" id="mainContainer">
         <div class="content-left">
+            <h1>Hello, 陌生人。</h1>
             <p>纪念我们第一次跨年</p>
             <p>祝我们永远如初</p>
             <p>祝我们永远幸福</p>
@@ -95,7 +94,7 @@
         const mTitle = document.getElementById('mTitle');
         
         let width, height, treeX, treeY, treeScale, dpr;
-        let staticLeaves = [], fallingLeaves = [], groundHeightMap = [];
+        let staticLeaves = [], fallingLeaves = [], groundHeightMap = [], photosToDrop = [];
         
         const photoGallery = [
             { url: '1.jpg', title: '第一次跨年' },
@@ -115,7 +114,6 @@
             width = window.innerWidth;
             height = window.innerHeight;
 
-            // --- 高清适配逻辑 ---
             canvas.width = width * dpr;
             canvas.height = height * dpr;
             ctx.scale(dpr, dpr); 
@@ -127,9 +125,11 @@
                 treeScale = Math.max(width / 1300, 0.8);
             } else {
                 treeX = width * 0.5; treeY = height * 0.85;
-                treeScale = Math.max(width / 750, 0.45); // 进一步缩小手机端的树
+                treeScale = Math.max(width / 750, 0.45);
             }
             
+            // 每次缩放重置掉落队列
+            photosToDrop = [...photoGallery];
             generateStaticLeaves();
         }
 
@@ -183,8 +183,9 @@
                 const s = Math.sin(time + l.swing) * 1.5;
                 drawHeart(l.x + s, l.y + s, l.size, l.colors, 0.85, l.angle);
 
-                if (photosToDrop.length > 0 && Math.random() > 0.997) { 
-                    const data = photosToDrop.shift();
+                // --- 修改点：shift() 确保照片发一张少一张 ---
+                if (photosToDrop.length > 0 && Math.random() > 0.996) { 
+                    const data = photosToDrop.shift(); // 关键修正
                     fallingLeaves.push({
                         x: l.x, y: l.y, size: l.size, colors: l.colors,
                         angle: l.angle, vx: (Math.random() * 0.8 - 0.4), vy: 1.5, 
@@ -202,7 +203,7 @@
                     if (p.y >= gLevel) {
                         if (Math.abs(p.x - treeX) < 220 * treeScale) {
                             createGroundPetal(p.x, gLevel, p.size, p.colors.fill, p.angle, p.memory);
-                            for(let k=-12; k<=12; k++) if(curX+k >=0 && curX+k < width) groundHeightMap[curX+k] += 2.5 * Math.exp(-(k*k)/45);
+                            for(let k=-12; k<=12; k++) if(curX+k >=0 && curX+k < width) groundHeightMap[curX+k] += 3 * Math.exp(-(k*k)/40);
                         }
                         fallingLeaves.splice(i, 1); continue;
                     }
@@ -226,7 +227,8 @@
             const img = document.createElement('img');
             img.src = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="-20 -20 40 40"><path d="M0,0 C-10,-10 -20,6 0,20 C20,6 10,-10 0,0 Z" fill="${encodeURIComponent(col)}"/></svg>`;
             img.className = 'ground-petal';
-            img.style.left = (x - size) + 'px'; img.style.top = (y - size + 2) + 'px'; 
+            img.style.left = (x - size) + 'px'; 
+            img.style.top = (y - size + 3) + 'px'; 
             img.style.width = (size * 2) + 'px';
             img.style.transform = `rotate(${ang}rad) scale(${1.1 + Math.random()*0.2}, ${0.6 + Math.random()*0.2})`;
             img.onclick = () => { mImg.src = mem.url; mTitle.innerText = mem.title; modal.classList.add('active'); overlay.style.display = 'block'; };
@@ -239,5 +241,3 @@
     </script>
 </body>
 </html>
-
-
