@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>WE - Forever</title>
+    <title>WE - Memory Tree</title>
     <style>
         body, html {
             margin: 0; padding: 0; width: 100%; height: 100%;
@@ -42,26 +42,42 @@
             height: 2px; background-color: #333; z-index: 2;
         }
 
+        /* --- 核心改进：落地花瓣的平滑交互 --- */
         .ground-petal {
-            position: absolute; z-index: 6; cursor: pointer;
-            transition: top 0.6s cubic-bezier(0.25, 0.8, 0.25, 1), transform 0.6s ease;
+            position: absolute;
+            z-index: 6;
+            cursor: pointer;
+            /* 落地时的平滑过渡：位置、旋转、大小 */
+            transition: top 0.6s cubic-bezier(0.25, 0.8, 0.25, 1), 
+                        transform 0.6s cubic-bezier(0.25, 0.8, 0.25, 1), 
+                        filter 0.3s;
+            filter: drop-shadow(0 2px 2px rgba(0,0,0,0.1)); 
             transform-origin: center bottom;
+            opacity: 0.95;
+        }
+
+        /* 鼠标悬停交互 */
+        .ground-petal:hover {
+            transform: scale(1.5) rotate(0deg) !important; /* 悬停时正过来并放大 */
+            filter: brightness(1.1) drop-shadow(0 5px 8px rgba(0,0,0,0.2));
+            z-index: 100;
         }
 
         .modal {
             display: none; position: fixed; top: 50%; left: 50%;
             transform: translate(-50%, -50%); z-index: 2000;
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
-            padding: 20px; border-radius: 20px; text-align: center;
-            width: 80%; max-width: 340px; box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            background: rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            padding: 20px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.5);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.15); text-align: center;
+            width: 80%; max-width: 340px;
         }
         .modal.active { display: block; animation: zoom 0.4s ease; }
-        .modal img { width: 100%; border-radius: 12px; border: 3px solid white; }
-        .modal p { color: #333; margin-top: 15px; font-weight: bold; letter-spacing: 1px; }
+        .modal img { width: 100%; border-radius: 16px; border: 3px solid white; box-sizing: border-box; }
+        .modal p { color: #333; margin-top: 15px; font-weight: bold; letter-spacing: 2px; }
         
-        @keyframes zoom { from { transform: translate(-50%, -50%) scale(0.9); opacity: 0; } }
-        .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.3); z-index: 1999; }
+        @keyframes zoom { from { transform: translate(-50%, -50%) scale(0.8); opacity: 0; } to { transform: translate(-50%, -50%) scale(1); opacity: 1; } }
+        .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.2); z-index: 1999; }
     </style>
 </head>
 <body>
@@ -74,7 +90,6 @@
 
     <div class="container" id="mainContainer">
         <div class="content-left">
-            <h1>Hello, 陌生人。</h1>
             <p>纪念我们第一次跨年</p>
             <p>祝我们永远如初</p>
             <p>祝我们永远幸福</p>
@@ -88,6 +103,7 @@
     <script>
         const canvas = document.getElementById('treeCanvas');
         const ctx = canvas.getContext('2d');
+        const container = document.getElementById('mainContainer');
         const modal = document.getElementById('modal');
         const overlay = document.getElementById('overlay');
         const mImg = document.getElementById('mImg');
@@ -113,7 +129,6 @@
             dpr = window.devicePixelRatio || 1;
             width = window.innerWidth;
             height = window.innerHeight;
-
             canvas.width = width * dpr;
             canvas.height = height * dpr;
             ctx.scale(dpr, dpr); 
@@ -127,8 +142,6 @@
                 treeX = width * 0.5; treeY = height * 0.85;
                 treeScale = Math.max(width / 750, 0.45);
             }
-            
-            // 每次缩放重置掉落队列
             photosToDrop = [...photoGallery];
             generateStaticLeaves();
         }
@@ -141,7 +154,6 @@
                 const r = Math.pow(Math.random(), 0.5) * (240 * treeScale); 
                 const lx = treeX + 16 * Math.pow(Math.sin(t), 3) * (r / 15);
                 const ly = (treeY - 330 * treeScale) - (13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t)) * (r / 15);
-                
                 if (ly < treeY - 110 * treeScale) {
                     staticLeaves.push({ 
                         x: lx, y: ly, size: (Math.random() * 8 + 4) * treeScale, 
@@ -157,14 +169,12 @@
             ctx.strokeStyle = '#1a1a1a';
             ctx.lineCap = 'round';
             const bW = 18 * treeScale, bH = 190 * treeScale;
-
             ctx.beginPath();
             ctx.moveTo(treeX - bW, treeY);
             ctx.quadraticCurveTo(treeX, treeY - bH/2, treeX - bW/4, treeY - bH); 
             ctx.lineTo(treeX + bW/4, treeY - bH); 
             ctx.quadraticCurveTo(treeX + bW/2, treeY - bH/2, treeX + bW*1.5, treeY); 
             ctx.fill();
-
             ctx.lineWidth = 5 * treeScale;
             [[treeX, treeY-130*treeScale, treeX-70*treeScale, treeY-240*treeScale],
              [treeX, treeY-120*treeScale, treeX+80*treeScale, treeY-230*treeScale]].forEach(b => {
@@ -178,14 +188,11 @@
             ctx.clearRect(0, 0, width, height);
             const time = Date.now() * 0.0008;
             drawTrunk();
-
             staticLeaves.forEach(l => {
                 const s = Math.sin(time + l.swing) * 1.5;
                 drawHeart(l.x + s, l.y + s, l.size, l.colors, 0.85, l.angle);
-
-                // --- 修改点：shift() 确保照片发一张少一张 ---
                 if (photosToDrop.length > 0 && Math.random() > 0.996) { 
-                    const data = photosToDrop.shift(); // 关键修正
+                    const data = photosToDrop.shift();
                     fallingLeaves.push({
                         x: l.x, y: l.y, size: l.size, colors: l.colors,
                         angle: l.angle, vx: (Math.random() * 0.8 - 0.4), vy: 1.5, 
@@ -193,7 +200,6 @@
                     });
                 }
             });
-
             for (let i = fallingLeaves.length - 1; i >= 0; i--) {
                 let p = fallingLeaves[i];
                 p.vy += 0.035; p.x += p.vx + Math.sin(time * 3 + p.phase) * 0.6; p.y += p.vy; p.angle += 0.05;
@@ -223,16 +229,36 @@
             ctx.fillStyle = g; ctx.fill(); ctx.restore();
         }
 
-        function createGroundPetal(x, y, size, col, ang, mem) {
-            const img = document.createElement('img');
-            img.src = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="-20 -20 40 40"><path d="M0,0 C-10,-10 -20,6 0,20 C20,6 10,-10 0,0 Z" fill="${encodeURIComponent(col)}"/></svg>`;
-            img.className = 'ground-petal';
-            img.style.left = (x - size) + 'px'; 
-            img.style.top = (y - size + 3) + 'px'; 
-            img.style.width = (size * 2) + 'px';
-            img.style.transform = `rotate(${ang}rad) scale(${1.1 + Math.random()*0.2}, ${0.6 + Math.random()*0.2})`;
-            img.onclick = () => { mImg.src = mem.url; mTitle.innerText = mem.title; modal.classList.add('active'); overlay.style.display = 'block'; };
-            document.getElementById('mainContainer').appendChild(img);
+        // --- 修正后的着陆逻辑 ---
+        function createGroundPetal(x, finalY, size, color, angle, memoryData) {
+            const petal = document.createElement('img');
+            petal.src = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="-20 -20 40 40"><path d="M0,0 C-10,-10 -20,6 0,20 C20,6 10,-10 0,0 Z" fill="${encodeURIComponent(color)}"/></svg>`;
+            petal.className = 'ground-petal';
+            
+            // 初始状态：让它稍微高一点点并保持空中旋转
+            const initialOffset = 15;
+            petal.style.left = (x - size) + 'px'; 
+            petal.style.top = (finalY - size + 5 - initialOffset) + 'px'; 
+            petal.style.width = (size * 2) + 'px';
+            petal.style.transform = `rotate(${angle}rad) scale(1, 1)`;
+
+            container.appendChild(petal);
+            
+            // 强制浏览器重绘
+            petal.getBoundingClientRect();
+
+            // 下一帧进入“定居”状态
+            requestAnimationFrame(() => {
+                const finalScaleX = 1 + Math.random() * 0.3;
+                const finalScaleY = 0.5 + Math.random() * 0.3;
+                petal.style.top = (finalY - size + 5) + 'px'; // 移到准确的地面高度
+                petal.style.transform = `rotate(${angle}rad) scale(${finalScaleX}, ${finalScaleY})`;
+            });
+            
+            petal.onclick = () => {
+                mImg.src = memoryData.url; mTitle.innerText = memoryData.title;
+                modal.classList.add('active'); overlay.style.display = 'block';
+            };
         }
 
         overlay.onclick = () => { modal.classList.remove('active'); overlay.style.display = 'none'; };
