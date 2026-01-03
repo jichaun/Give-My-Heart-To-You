@@ -3,48 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>WE - Mobile Optimized</title>
+    <title>WE - Forever</title>
     <style>
         body, html {
             margin: 0; padding: 0; width: 100%; height: 100%;
             overflow: hidden; background-color: #fdfdf0; 
             font-family: "Microsoft YaHei", sans-serif;
-            touch-action: manipulation; /* 优化移动端点击延迟 */
+            touch-action: manipulation;
         }
 
         .container {
             position: relative; width: 100vw; height: 100vh;
             display: flex; 
-            flex-direction: row; /* 默认电脑端横向排列 */
+            flex-direction: row; 
             align-items: center; justify-content: flex-start;
         }
 
-        /* --- 手机端响应式适配 --- */
+        /* 文字区域 */
+        .content-left {
+            width: 45%; padding-left: 8%; z-index: 10; pointer-events: none;
+            position: relative;
+        }
+        .content-left h1 { font-size: 2.5rem; color: #333; margin-bottom: 30px; }
+        .content-left p {
+            font-size: 1.1rem; color: #555; line-height: 2.2; margin: 0;
+            letter-spacing: 1px; opacity: 0; animation: fadeInText 2s ease forwards;
+        }
+
+        /* --- 手机端适配：文字在上，树在下 --- */
         @media (max-width: 768px) {
             .container { 
-                flex-direction: column; /* 手机端改为垂直排列：文字在上，树在下 */
+                flex-direction: column; 
                 justify-content: flex-start;
                 align-items: center;
             }
             .content-left { 
                 width: 90% !important; 
                 padding: 10% 0 0 0 !important; 
-                text-align: center; /* 文字居中显示 */
+                text-align: center; 
             }
-            .content-left h1 { font-size: 1.8rem !important; margin-bottom: 20px !important; }
-            .content-left p { font-size: 0.9rem !important; line-height: 2 !important; }
-            .horizon { bottom: 15% !important; } /* 移动端地平线位置微调 */
-        }
-
-        .content-left {
-            width: 45%; padding-left: 8%; z-index: 10; pointer-events: none;
-            position: relative;
-        }
-
-        .content-left h1 { font-size: 2.5rem; color: #333; margin-bottom: 30px; }
-        .content-left p {
-            font-size: 1.1rem; color: #555; line-height: 2.2; margin: 0;
-            letter-spacing: 1px; opacity: 0; animation: fadeInText 2s ease forwards;
+            .content-left h1 { font-size: 1.8rem !important; margin-bottom: 15px !important; }
+            .content-left p { font-size: 0.9rem !important; line-height: 1.8 !important; }
+            .horizon { bottom: 12% !important; } 
         }
 
         @keyframes fadeInText {
@@ -59,15 +59,13 @@
             height: 2px; background-color: #333; z-index: 2;
         }
 
-        /* 落地花瓣样式 */
         .ground-petal {
             position: absolute; z-index: 6; cursor: pointer;
-            transition: top 0.5s ease, transform 0.5s ease;
+            transition: top 0.5s cubic-bezier(0.25, 0.8, 0.25, 1), transform 0.5s ease;
             filter: drop-shadow(0 2px 2px rgba(0,0,0,0.1)); 
             transform-origin: center bottom;
         }
 
-        /* 弹窗适配手机端 */
         .modal {
             display: none; position: fixed; top: 50%; left: 50%;
             transform: translate(-50%, -50%); z-index: 2000;
@@ -138,15 +136,15 @@
             height = canvas.height = window.innerHeight;
             groundHeightMap = new Array(width).fill(0);
             
-            // --- 动态计算布局比例 ---
             if (width > 768) {
-                treeX = width * 0.7; // 电脑端树在右侧
+                treeX = width * 0.7; 
                 treeY = height * 0.8;
                 treeScale = Math.max(width / 1400, 0.85); 
             } else {
-                treeX = width * 0.5; // 手机端树居中
-                treeY = height * 0.85;
-                treeScale = Math.max(width / 450, 0.7);
+                treeX = width * 0.5; 
+                treeY = height * 0.88; // 稍微向下移动，留出上方空间
+                // 核心：缩小手机端的树木比例
+                treeScale = Math.max(width / 800, 0.45); 
             }
             
             photosToDrop = [...photoGallery];
@@ -156,16 +154,17 @@
 
         function generateStaticLeaves() {
             staticLeaves = [];
-            const count = width > 768 ? 1600 : 850;
+            // 手机端减少叶片数量，防止过小导致重叠太严重
+            const count = width > 768 ? 1600 : 700;
             for (let i = 0; i < count; i++) {
                 const t = Math.random() * Math.PI * 2;
-                const r = Math.pow(Math.random(), 0.5) * (250 * treeScale); 
+                const r = Math.pow(Math.random(), 0.5) * (240 * treeScale); 
                 const lx = treeX + 16 * Math.pow(Math.sin(t), 3) * (r / 15);
                 const ly = (treeY - 330 * treeScale) - (13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t)) * (r / 15);
                 
-                if (ly < treeY - 130 * treeScale) {
+                if (ly < treeY - 110 * treeScale) {
                     staticLeaves.push({ 
-                        x: lx, y: ly, size: (Math.random() * 8 + 4) * treeScale, 
+                        x: lx, y: ly, size: (Math.random() * 7 + 4) * treeScale, 
                         colors: colorPalette[Math.floor(Math.random() * colorPalette.length)], 
                         angle: Math.random() * Math.PI, 
                         swing: Math.random() * Math.PI * 2 
@@ -189,8 +188,8 @@
             ctx.fill();
 
             const branches = [
-                {s: [treeX, treeY-135*treeScale], e: [treeX-75*treeScale, treeY-245*treeScale], w: 6*treeScale},
-                {s: [treeX, treeY-125*treeScale], e: [treeX+85*treeScale, treeY-235*treeScale], w: 5*treeScale}
+                {s: [treeX, treeY-130*treeScale], e: [treeX-70*treeScale, treeY-240*treeScale], w: 5*treeScale},
+                {s: [treeX, treeY-120*treeScale], e: [treeX+80*treeScale, treeY-230*treeScale], w: 4.5*treeScale}
             ];
             branches.forEach(b => {
                 ctx.lineWidth = b.w;
@@ -208,13 +207,13 @@
 
             staticLeaves.forEach(l => {
                 const s = Math.sin(time + l.swing) * 1.5;
-                drawHeartCanvas(l.x + s, l.y + s, l.size, l.colors, 0.85, l.angle);
+                drawHeart(l.x + s, l.y + s, l.size, l.colors, 0.85, l.angle);
 
                 if (photosToDrop.length > 0 && Math.random() > 0.996) { 
                     const data = photosToDrop.shift();
                     fallingLeaves.push({
                         x: l.x, y: l.y, size: l.size, colors: l.colors,
-                        angle: l.angle, vx: (Math.random() * 0.8 - 0.4), vy: 1.8, 
+                        angle: l.angle, vx: (Math.random() * 0.8 - 0.4), vy: 1.5, 
                         phase: Math.random() * Math.PI * 2, memory: data 
                     });
                 }
@@ -222,27 +221,27 @@
 
             for (let i = fallingLeaves.length - 1; i >= 0; i--) {
                 let p = fallingLeaves[i];
-                p.vy += 0.04; p.x += p.vx + Math.sin(time * 3 + p.phase) * 0.6; p.y += p.vy; p.angle += 0.05;
+                p.vy += 0.035; p.x += p.vx + Math.sin(time * 3 + p.phase) * 0.6; p.y += p.vy; p.angle += 0.05;
                 let curX = Math.floor(p.x);
                 if (curX >= 0 && curX < width) {
                     let gLevel = treeY - groundHeightMap[curX];
                     if (p.y >= gLevel) {
-                        if (Math.abs(p.x - treeX) < 240 * treeScale) {
+                        if (Math.abs(p.x - treeX) < 220 * treeScale) {
                             createGroundPetal(p.x, gLevel, p.size, p.colors.fill, p.angle, p.memory);
                             for(let k=-12; k<=12; k++){
-                                if(curX+k >=0 && curX+k < width) groundHeightMap[curX+k] += 2.8 * Math.exp(-(k*k)/45);
+                                if(curX+k >=0 && curX+k < width) groundHeightMap[curX+k] += 2.5 * Math.exp(-(k*k)/45);
                             }
                         }
                         fallingLeaves.splice(i, 1);
                         continue;
                     }
                 }
-                drawHeartCanvas(p.x, p.y, p.size, p.colors, 0.9, p.angle);
+                drawHeart(p.x, p.y, p.size, p.colors, 0.9, p.angle);
             }
             requestAnimationFrame(animate);
         }
 
-        function drawHeartCanvas(x, y, size, col, alpha, ang) {
+        function drawHeart(x, y, size, col, alpha, ang) {
             ctx.save(); ctx.translate(x, y); ctx.rotate(ang); ctx.globalAlpha = alpha;
             const g = ctx.createRadialGradient(0, 0, 0, 0, 0, size);
             g.addColorStop(0, col.fill); g.addColorStop(1, col.stroke);
@@ -259,9 +258,9 @@
             img.style.left = (x - size) + 'px'; 
             img.style.top = (y - size + 2) + 'px'; 
             img.style.width = (size * 2) + 'px';
-            img.style.transform = `rotate(${ang}rad) scale(${1.2 + Math.random()*0.2}, ${0.7 + Math.random()*0.2})`;
+            img.style.transform = `rotate(${ang}rad) scale(${1.1 + Math.random()*0.2}, ${0.6 + Math.random()*0.2})`;
             
-            // --- 核心：确保点击事件触发 ---
+            // 点击显示图片效果
             img.onclick = () => {
                 mImg.src = mem.url; mTitle.innerText = mem.title;
                 modal.classList.add('active'); overlay.style.display = 'block';
@@ -270,10 +269,12 @@
         }
 
         overlay.onclick = () => { modal.classList.remove('active'); overlay.style.display = 'none'; };
+        
         window.addEventListener('resize', () => {
             init();
             document.querySelectorAll('.ground-petal').forEach(el => el.remove());
         });
+        
         window.onload = init;
         document.querySelectorAll('.content-left p').forEach((p, i) => p.style.animationDelay = `${(i + 1) * 0.4}s`);
     </script>
