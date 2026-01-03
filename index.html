@@ -184,8 +184,8 @@
                 const s = Math.sin(time + l.swing) * 1.5;
                 drawHeart(l.x + s, l.y + s, l.size, l.colors, 0.85, l.angle);
 
-                if (photoGallery.length > 0 && Math.random() > 0.997) { 
-                    const data = photoGallery[Math.floor(Math.random()*photoGallery.length)];
+                if (photosToDrop.length > 0 && Math.random() > 0.997) { 
+                    const data = photosToDrop.shift();
                     fallingLeaves.push({
                         x: l.x, y: l.y, size: l.size, colors: l.colors,
                         angle: l.angle, vx: (Math.random() * 0.8 - 0.4), vy: 1.5, 
@@ -240,3 +240,4 @@
     </script>
 </body>
 </html>
+
